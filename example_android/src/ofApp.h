@@ -12,18 +12,26 @@
 
 using namespace dlib;
 
+struct DataMark
+{
+    std::vector<ofRectangle> rt;
+    std::vector<std::vector<glm::vec2>> pt;
+};
+
 class dlib_detect : public ofThread
 {
-    public:
-    //std::vector<dlib::full_object_detection> shapes;
+public:
+    shape_predictor sp;
+    std::vector<std::vector<glm::vec2>> shapes;
     std::vector<dlib::rectangle> dets;
     dlib::frontal_face_detector detector;
     matrix<rgb_pixel>im;
     std::vector<ofRectangle> rt;
 
-    void setup()
+    void setup(string _p)
     {
         detector = dlib::get_frontal_face_detector();
+        deserialize(ofToDataPath(_p,true)) >> sp;
         startThread(true);
     }
 
@@ -32,9 +40,12 @@ class dlib_detect : public ofThread
         im = mat(_pix);
     }
 
-    std::vector<ofRectangle> get()
+    DataMark get()
     {
-        return rt;
+        DataMark m;
+        m.rt = rt;
+        m.pt = shapes;
+        return m;
     }
 
     void threadedFunction()
@@ -42,10 +53,18 @@ class dlib_detect : public ofThread
         while(isThreadRunning())
         {
             dets = detector(im);
+            shapes.clear();
             rt.clear();
-            for(int i = 0; i < dets.size(); i++)
+            for (unsigned long j = 0; j < dets.size(); j++)
             {
-                rt.push_back(ofRectangle(ofxDlib::toOf(dets[i])));
+                full_object_detection shape = sp(im, dets[j]);
+                std::vector<glm::vec2> sh;
+                for(unsigned int i = 0; i < shape.num_parts(); i++) {
+                    glm::vec2 v = ofxDlib::toOf(shape.part(i));
+                    sh.push_back(v);
+                }
+                shapes.push_back(sh);
+                rt.push_back(ofRectangle(ofxDlib::toOf(dets[j])));
             }
         }
     }
@@ -54,14 +73,14 @@ class dlib_detect : public ofThread
 class ofApp : public ofxAndroidApp
 {	
 	public:
+        dlib_detect dl;
         ofVideoGrabber cam;
         ofImage image,imgdr;
         int w,h,w2,h2;
         int rsw, rsh;
-        float aspect;
-        dlib_detect dl;
         int reduc;
 
+        void exit();
         void setup();
 	    void update();
 	    void draw();

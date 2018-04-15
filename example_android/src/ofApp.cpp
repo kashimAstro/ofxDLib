@@ -7,21 +7,21 @@
 void ofApp::setup()
 {
     ofLogNotice("ofxDlib") << "START";
-    cam.setup(1280,768);
 
+    w      = ofGetWidth();
+    h      = ofGetHeight();
+    cam.setup( h,w );
     ofxAndroidVideoGrabber* androidGrabber = (ofxAndroidVideoGrabber*)cam.getGrabber().get();
     androidGrabber->setDeviceID(androidGrabber->getFrontCamera());
-    aspect = cam.getWidth() / cam.getHeight();
+    dl.setup("shape_predictor_68_face_landmarks.dat");
 
-    reduc = 4;
-    w     = ofGetWidth();
-    h     = ofGetHeight();
-    w2    = w/2;
-    h2    = h/2;
-    rsw   = cam.getWidth()/reduc;
-    rsh   = cam.getHeight()/reduc;
+    reduc  = 12;
+    w2     = w/2;
+    h2     = h/2;
+    rsw    = cam.getWidth()/reduc;
+    rsh    = cam.getHeight()/reduc;
 
-    dl.setup();
+    ofLogNotice("ofxDlib") << "dlib-frame: " << rsw << "x" << rsh;
 }
 
 void ofApp::update()
@@ -29,8 +29,11 @@ void ofApp::update()
     cam.update();
     if(cam.isFrameNew())
     {
+        /* render */
         imgdr.setFromPixels(cam.getPixels());
         imgdr.rotate90(-45);
+
+        /* dlib frame detector */
         image.setFromPixels(cam.getPixels());
         image.resize(rsw,rsh);
         image.rotate90(-45);
@@ -43,22 +46,37 @@ void ofApp::draw()
     ofBackground(ofColor::white);
 
     ofPushMatrix();
-    ofSetRectMode(OF_RECTMODE_CENTER);
-    ofTranslate(w2,h2);
+    //
     ofSetColor(255);
     imgdr.draw(0, 0);
 
-    std::vector<ofRectangle> d = dl.get();
-    for(int i = 0; i < d.size(); i++){
-	    ofPushStyle();
-	    ofNoFill();
-	    ofSetColor(ofColor::orange);
-	    ofRectangle r = d[i];
-        ofSetLineWidth(10);
-        ofDrawRectangle(r.x*(reduc/2),r.y*(reduc/2),r.width*reduc,r.height*reduc);
-	    ofPopStyle();
+    DataMark d = dl.get();
+    for(int i = 0; i < d.rt.size(); i++)
+    {
+        ofPushStyle();
+        ofNoFill();
+        ofSetColor(ofColor::yellow);
+        ofRectangle r = d.rt[i];
+        ofSetLineWidth(15);
+        ofDrawRectangle(r.x*reduc,r.y*reduc,r.width*reduc,r.height*reduc);
+        ofPopStyle();
+        for(int j = 0; j < d.pt[i].size(); j++)
+        {
+            ofPushStyle();
+            ofSetColor(ofColor::red);
+            glm::vec2 p = d.pt[i][j];
+            ofDrawEllipse(p.x*reduc,p.y*reduc,20,20);
+            ofPopStyle();
+        }
     }
+
+    //
     ofPopMatrix();
+}
+
+void ofApp::exit()
+{
+    dl.stopThread();
 }
 
 void ofApp::touchDown(int x, int y, int id){ }

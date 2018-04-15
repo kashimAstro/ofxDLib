@@ -18,21 +18,10 @@ public class OFActivity extends cc.openframeworks.OFActivity{
     {
         super.onCreate(savedInstanceState);
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-        final Button button = (Button)findViewById(R.id.audio);
-        button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                            }
-        });
     }
 
     @Override
     public void onDetachedFromWindow() {}
-
-    public String getIMEI() {
-        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        return telephonyManager.getDeviceId().toString();
-    }
 
     // Menus
     // http://developer.android.com/guide/topics/ui/menus.html
