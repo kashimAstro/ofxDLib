@@ -3,14 +3,6 @@
 
        <RelativeLayout android:id="@+id/of_gl_surface_container" android:layout_width="fill_parent" android:layout_height="fill_parent">
        </RelativeLayout>
-       <Button
-        android:id="@+id/audio"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="13dp"
-        android:layout_marginStart="16dp"
-        android:text="MSG" />
+
     	<!-- add here other views' layouts -->
     </RelativeLayout>
